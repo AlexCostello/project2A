@@ -10,15 +10,14 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 
 # Preprocessor definitions for this target.
 set(CMAKE_TARGET_DEFINITIONS_CXX
-  "vtkDomainsChemistry_AUTOINIT=1(vtkDomainsChemistryOpenGL2)"
-  "vtkRenderingContext2D_AUTOINIT=1(vtkRenderingContextOpenGL2)"
-  "vtkRenderingCore_AUTOINIT=3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)"
-  "vtkRenderingVolume_AUTOINIT=1(vtkRenderingVolumeOpenGL2)"
+  "vtkRenderingContext2D_AUTOINIT=1(vtkRenderingContextOpenGL)"
+  "vtkRenderingCore_AUTOINIT=3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL)"
+  "vtkRenderingVolume_AUTOINIT=1(vtkRenderingVolumeOpenGL)"
   )
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "/usr/local/include/vtk-7.0"
+  "/usr/local/include/vtk-6.3"
   "/usr/local/include"
   )
 

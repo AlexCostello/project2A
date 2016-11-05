@@ -16,6 +16,7 @@
 // This examples demonstrates the effect of specular lighting.
 //
 #include "vtkSmartPointer.h"
+#include "vtkOpenGL.h"
 #include "vtkSphereSource.h"
 #include "vtkPolyDataMapper.h"
 #include "vtkActor.h"
@@ -30,6 +31,7 @@
 #include "vtkOpenGLPolyDataMapper.h"
 #include "vtkJPEGReader.h"
 #include "vtkImageData.h"
+#include "GL/glut.h"
 
 #include <vtkPolyData.h>
 #include <vtkPointData.h>
