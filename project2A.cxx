@@ -32,6 +32,7 @@
 #include "vtkJPEGReader.h"
 #include "vtkImageData.h"
 #include "GL/glut.h"
+#include "GL/gl.h"
 
 #include <vtkPolyData.h>
 #include <vtkPointData.h>
@@ -161,6 +162,37 @@ GetColorMap(void)
     return ptr;
 }
 
+int *GetLines(void){
+    int i, j;
+    int lines[16][3] =
+    {
+        { -10, -10, 10 },
+        { -10, 10,  10 },
+        { 10, 10, 10},
+        {10, -10, 10},
+        {-10, -10, 10},
+        {-10, -10, -10},
+        {10, -10, -10},
+        {10, -10, 10},
+        {10, 10, 10},
+        {10, 10, -10},
+        {10, -10, -10},
+        {10, 10, -10},
+        {-10, 10, -10},
+        {-10, -10, -10},
+        {-10, 10, -10},
+        {-10, 10, 10},
+
+    };
+
+    int *lines2 = new int[48];
+    for(i = 0; i < 16; i++){
+        for(j = 0; j < 3; j++){
+            lines2[3*i+j] = lines[i][j];
+        }
+    }
+    return lines2;
+}
 
 class vtk441Mapper : public vtkOpenGLPolyDataMapper
 {
@@ -214,34 +246,49 @@ class vtk441MapperPart1 : public vtk441Mapper
  public:
    static vtk441MapperPart1 *New();
    unsigned char* ColorMap;
-
-   
-
+   int *lines;
    std::vector<Triangle> triangles;
    
    virtual void RenderPiece(vtkRenderer *ren, vtkActor *act)
    {
+      int colorIndex;
+
       glEnable(GL_COLOR_MATERIAL);
       RemoveVTKOpenGLStateSideEffects();
       SetupLight();
+      GLuint displayList = glGenLists(1);
+      glNewList(displayList, GL_COMPILE);
       glBegin(GL_TRIANGLES);
       float ambient[3] = {1, 1, 1};
-      int val;
-      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
+      //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
       triangles = GetTriangles();
-      glColor3ub(0, 255, 255);
-      ColorMap = GetColorMap();
-      for(int i = 0; i < 1; i++){
-          for(int j = 0; j < 3; j++){
-              //val = (int) fieldValue[j] * 255;
 
-              //glColor3ubv(ColorMap[0]);
+      ColorMap = GetColorMap();
+      for(int i = 0; i < triangles.size(); i++){
+          for(int j = 0; j < 3; j++){
+              colorIndex = (int) (triangles[i].fieldValue[j] * 255)*3;
+              glColor3ub(ColorMap[colorIndex], ColorMap[colorIndex+1], ColorMap[colorIndex+2]);
               glVertex3f(triangles[i].X[j], triangles[i].Y[j], triangles[i].Z[j]);
+
           }
+        
       }
 
       glEnd();
+
+      glBegin(GL_LINES);
+      lines = GetLines();
+      glColor3ub(255, 255, 255);
+      for(int k = 0; k < 15; k++){
+          glVertex3f(lines[k*3], lines[k*3+1], lines[k*3+2]);
+          glVertex3f(lines[(k+1)*3], lines[(k+1)*3+1], lines[(k+1)*3+2]);
+      }
+    
+      glEnd();
+      glEndList();
+      glCallList(displayList);
    }
+   
 };
 
 vtkStandardNewMacro(vtk441MapperPart1);
