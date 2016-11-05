@@ -213,15 +213,33 @@ class vtk441MapperPart1 : public vtk441Mapper
 {
  public:
    static vtk441MapperPart1 *New();
+   unsigned char* ColorMap;
+
+   
+
+   std::vector<Triangle> triangles;
    
    virtual void RenderPiece(vtkRenderer *ren, vtkActor *act)
    {
+      glEnable(GL_COLOR_MATERIAL);
       RemoveVTKOpenGLStateSideEffects();
       SetupLight();
       glBegin(GL_TRIANGLES);
-      glVertex3f(-10, -10, -10);
-      glVertex3f(10, -10, 10);
-      glVertex3f(10, 10, 10);
+      float ambient[3] = {1, 1, 1};
+      int val;
+      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
+      triangles = GetTriangles();
+      glColor3ub(0, 255, 255);
+      ColorMap = GetColorMap();
+      for(int i = 0; i < 1; i++){
+          for(int j = 0; j < 3; j++){
+              //val = (int) fieldValue[j] * 255;
+
+              //glColor3ubv(ColorMap[0]);
+              glVertex3f(triangles[i].X[j], triangles[i].Y[j], triangles[i].Z[j]);
+          }
+      }
+
       glEnd();
    }
 };
@@ -242,9 +260,11 @@ class vtk441MapperPart2 : public vtk441Mapper
    }
    virtual void RenderPiece(vtkRenderer *ren, vtkActor *act)
    {
+       glEnable(GL_COLOR_MATERIAL);
        RemoveVTKOpenGLStateSideEffects();
        SetupLight();
        glBegin(GL_TRIANGLES);
+       glColor3ub(0, 255, 255);
        glVertex3f(-10, -10, -10);
        glVertex3f(10, -10, 10);
        glVertex3f(10, 10, 10);
