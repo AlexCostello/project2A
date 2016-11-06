@@ -282,6 +282,7 @@ class vtk441MapperPart1 : public vtk441Mapper
       glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
       glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
       glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+      glDisable(GL_LIGHTING);
       GLuint displayList = glGenLists(1);
       glNewList(displayList, GL_COMPILE);
       glBegin(GL_TRIANGLES);
@@ -313,6 +314,7 @@ class vtk441MapperPart1 : public vtk441Mapper
       glEnd();
       glEndList();
       glCallList(displayList);
+      glDisable(GL_LIGHTING);
    }
    
 };
@@ -359,14 +361,26 @@ class vtk441MapperPart2 : public vtk441Mapper
    virtual void RenderPiece(vtkRenderer *ren, vtkActor *act)
    {
        int i, j, k;
+
+       GLfloat diffuse[4] = {.7, .7, .7, 1 };
+       GLfloat ambient[4] = {.2, .2, .2, 1};
+       GLfloat specular[4] = {0, 0, 0, 1};
+
        glEnable(GL_COLOR_MATERIAL);
        //SetUpTexture();
        //glBindTexture(GL_TEXTURE_1D, texture);
        RemoveVTKOpenGLStateSideEffects();
        SetupLight();
+       
+       glEnable(GL_LIGHTING);
+       glEnable(GL_LIGHT0);
+       glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+       glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+       glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+       glDisable(GL_LIGHTING);
        GLuint displayList2 = glGenLists(1);
        glNewList(displayList2, GL_COMPILE);
-       /*
+       
        GLubyte texture[24] = {71, 71, 219,
                               0, 0, 91,
                               0, 255, 255,
@@ -375,12 +389,13 @@ class vtk441MapperPart2 : public vtk441Mapper
                               255, 96, 0,
                               107, 0, 0,
                               224, 76, 76,};
-       glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 3, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+
+       glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 8, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
        glEnable(GL_TEXTURE_1D);
        glEnable(GL_COLOR_MATERIAL);
-       */
+       
        glBegin(GL_TRIANGLES);
        triangles = GetTriangles();
 
@@ -388,16 +403,18 @@ class vtk441MapperPart2 : public vtk441Mapper
            triangles[i].normalizeNormals();
            for(j = 0; j < 3; j++){
                glNormal3f(triangles[i].normals[j][0], triangles[i].normals[j][1], triangles[i].normals[j][2]);
-               //glTexCoord1f(triangles[i].fieldValue[j]);
-               //std::cout << "fieldValue: " << triangles[i].fieldValue[j] << "\n";
+               glTexCoord1f(triangles[i].fieldValue[j]);
                glVertex3f(triangles[i].X[j], triangles[i].Y[j], triangles[i].Z[j]);
 
            }
-           //std::cout << "\n";
+           
        }
        glEnd();
+       glDisable(GL_TEXTURE_1D);
+       glDisable(GL_COLOR_MATERIAL);
 
        glBegin(GL_LINES);
+       glEnable(GL_COLOR_MATERIAL);
        lines = GetLines();
        glColor3ub(255, 255, 255);
        for(k = 0; k < 15; k++){
