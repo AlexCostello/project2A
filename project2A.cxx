@@ -52,7 +52,23 @@ class Triangle
       double         Z[3];
       double         fieldValue[3]; // always between 0 and 1
       double         normals[3][3];
+        
+      void           normalizeNormals();
+
 };
+
+void Triangle::normalizeNormals(){
+    int i, j;
+    double norm;
+    for(i = 0; i < 3; i++){
+        norm = sqrt(normals[i][0]*normals[i][0] +
+                    normals[i][1]*normals[i][1] +
+                    normals[i][2]*normals[i][2]);
+        for(j = 0; j < 3; j++){
+            normals[i][j] = normals[i][j]/norm;
+        }
+    }
+}
 
 //
 // Function: GetTriangles
@@ -248,26 +264,36 @@ class vtk441MapperPart1 : public vtk441Mapper
    unsigned char* ColorMap;
    int *lines;
    std::vector<Triangle> triangles;
+  
    
    virtual void RenderPiece(vtkRenderer *ren, vtkActor *act)
    {
       int colorIndex;
 
+      GLfloat diffuse[4] = {.7, .7, .7, 1 };
+      GLfloat ambient[4] = {.2, .2, .2, 1 };
+      GLfloat specular[4] = {0, 0, 0, 1 };
+   
       glEnable(GL_COLOR_MATERIAL);
       RemoveVTKOpenGLStateSideEffects();
-      SetupLight();
+      SetupLight(); 
+      glEnable(GL_LIGHTING);
+      glEnable(GL_LIGHT0);
+      glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+      glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+      glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
       GLuint displayList = glGenLists(1);
       glNewList(displayList, GL_COMPILE);
       glBegin(GL_TRIANGLES);
-      float ambient[3] = {1, 1, 1};
-      //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
       triangles = GetTriangles();
 
       ColorMap = GetColorMap();
       for(int i = 0; i < triangles.size(); i++){
+          triangles[i].normalizeNormals();
           for(int j = 0; j < 3; j++){
               colorIndex = (int) (triangles[i].fieldValue[j] * 255)*3;
               glColor3ub(ColorMap[colorIndex], ColorMap[colorIndex+1], ColorMap[colorIndex+2]);
+              glNormal3f(triangles[i].normals[j][0], triangles[i].normals[j][1], triangles[i].normals[j][2]);
               glVertex3f(triangles[i].X[j], triangles[i].Y[j], triangles[i].Z[j]);
 
           }
@@ -297,25 +323,90 @@ class vtk441MapperPart2 : public vtk441Mapper
 {
  public:
    static vtk441MapperPart2 *New();
-   
    GLuint displayList;
+   //GLubyte texture;
    bool   initialized;
+   std::vector<Triangle> triangles;
+   int *lines;
 
    vtk441MapperPart2()
    {
      initialized = false;
    }
+    /*
+   void SetUpTexture(){
+       
+       texture[24] =         {71, 71, 219,
+                              0, 0, 91,
+                              0, 255, 255,
+                              0, 127, 0,
+                              255, 255, 0,
+                              255, 96, 0,
+                              107, 0, 0,
+                              224, 76, 76,};
+
+       glGenTextures(1, texture);
+       glBindTexture(GL_TEXTURE_1D);
+       glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 3, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+       glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+       glTexParemeterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+       glEnable(GL_TEXTURE_1D);
+       
+       
+   }
+   */
+
    virtual void RenderPiece(vtkRenderer *ren, vtkActor *act)
    {
+       int i, j, k;
        glEnable(GL_COLOR_MATERIAL);
+       //SetUpTexture();
+       //glBindTexture(GL_TEXTURE_1D, texture);
        RemoveVTKOpenGLStateSideEffects();
        SetupLight();
+       GLuint displayList2 = glGenLists(1);
+       glNewList(displayList2, GL_COMPILE);
+       /*
+       GLubyte texture[24] = {71, 71, 219,
+                              0, 0, 91,
+                              0, 255, 255,
+                              0, 127, 0,
+                              255, 255, 0,
+                              255, 96, 0,
+                              107, 0, 0,
+                              224, 76, 76,};
+       glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 3, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+       glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+       glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+       glEnable(GL_TEXTURE_1D);
+       glEnable(GL_COLOR_MATERIAL);
+       */
        glBegin(GL_TRIANGLES);
-       glColor3ub(0, 255, 255);
-       glVertex3f(-10, -10, -10);
-       glVertex3f(10, -10, 10);
-       glVertex3f(10, 10, 10);
+       triangles = GetTriangles();
+
+       for(i = 0; i < triangles.size(); i++){
+           triangles[i].normalizeNormals();
+           for(j = 0; j < 3; j++){
+               glNormal3f(triangles[i].normals[j][0], triangles[i].normals[j][1], triangles[i].normals[j][2]);
+               //glTexCoord1f(triangles[i].fieldValue[j]);
+               //std::cout << "fieldValue: " << triangles[i].fieldValue[j] << "\n";
+               glVertex3f(triangles[i].X[j], triangles[i].Y[j], triangles[i].Z[j]);
+
+           }
+           //std::cout << "\n";
+       }
        glEnd();
+
+       glBegin(GL_LINES);
+       lines = GetLines();
+       glColor3ub(255, 255, 255);
+       for(k = 0; k < 15; k++){
+           glVertex3f(lines[k*3], lines[k*3+1], lines[k*3+2]);
+           glVertex3f(lines[(k+1)*3], lines[(k+1)*3+1], lines[(k+1)*3+2]);
+       }
+       glEnd();
+       glEndList();
+       glCallList(displayList2);
    }
 };
 
